@@ -21,20 +21,11 @@ REFLECTION_QUESTIONS = {
  
 # ── Replace this with your own criteria before going live ─────────────────────
 SCORING_CRITERIA = """
-1. Pattern recognition (1–5): Did the player identify which buttons worked and how?
-   Did they notice when button behaviour shifted between phases?
- 
-2. Adaptability (1–5): Did they update their strategy when results shifted unexpectedly?
-   How quickly did they let go of assumptions that stopped working?
- 
-3. Hypothesis testing (1–5): Did they deliberately probe unknown buttons with small
-   allocations before committing large amounts? Did they act on what they discovered?
- 
-4. Structural thinking (1–5): Did they manage their budget as a whole system each round,
-   or make 7 independent decisions? Did they consciously balance exploration vs exploitation?
- 
-5. Working with uncertainty (1–5): How did they behave when outcomes were unclear
-   or unpredictable? Did they make decisions anyway, or stall and spread thin?
+1. Pattern recognition (1–5)
+2. Adaptability (1–5)
+3. Hypothesis testing (1–5)
+4. Structural thinking (1–5)
+5. Working with uncertainty (1–5)
 """
  
 # ── Button mechanics ──────────────────────────────────────────────────────────
@@ -329,22 +320,60 @@ Total points allocated per button across all 12 rounds:
 Reflections (written before seeing results — these reveal live thinking):
 {reflections_text}
  
-ASSESSMENT CRITERIA:
-{SCORING_CRITERIA}
+STEP 1 — HONESTY SCORE (do this first, before anything else):
+Compare every claim in the reflections against the actual move history.
+ 
+Score honesty 1–5 using these strict rules:
+- 1 or 2: Clear fabrication. The candidate described a strategy that is directly contradicted
+  by their moves across multiple rounds. Example: wrote "I tested all buttons systematically
+  with small amounts" but put 70–100 points on one button every round and ignored 4+ buttons entirely.
+  This must be a significant, repeated contradiction — not a small gap.
+- 3: Noticeable inconsistencies. Claims are partially true but meaningfully overstated or distorted.
+- 4: Minor gaps. Small differences between what they said and did, could be genuine blind spots.
+- 5: Moves and reflections are consistent. What they wrote matches what they actually did.
+ 
+If honesty score is 1 or 2: FINAL SCORE = 0. State this clearly and stop the detailed scoring.
+If honesty score is 3: multiply final score by 0.70
+If honesty score is 4: multiply final score by 0.90
+If honesty score is 5: no adjustment
+ 
+STEP 2 — SCORE EACH CRITERION (only if honesty >= 3):
+Reflections carry 70% of each score. Moves carry 30%.
  
 For each criterion provide:
 - Score: X/5
-- Observation: 1–2 sentences
-- Evidence: specific reference to a round, decision, or reflection
+- Reflection quality (70%): Did they articulate genuine insight? Was it specific and accurate?
+- Move evidence (30%): Do actual allocations support what they wrote? Reference specific rounds.
+- Contradictions: Any mismatch between words and actions.
  
-Close with a 3–4 sentence overall profile of this candidate's problem-solving style.
-Be direct and specific. Reference actual data."""
+The 5 criteria:
+1. Pattern recognition — did they identify which buttons worked and how?
+   Did their reflections show they noticed patterns, and do their moves confirm this?
+ 
+2. Adaptability — did their reflections describe updating strategy when things shifted?
+   Did their actual allocations change accordingly across rounds?
+ 
+3. Hypothesis testing — did they describe deliberate probing of unknown buttons?
+   Do their moves show small exploratory allocations followed by scaling up on discoveries?
+ 
+4. Structural thinking — did they describe managing budget as a whole system?
+   Do their moves show conscious portfolio decisions rather than 7 independent choices?
+ 
+5. Working with uncertainty — did they describe how they made decisions without full information?
+   Do their moves show decisive action under uncertainty or paralysis and spreading thin?
+ 
+STEP 3 — FINAL SCORE:
+- Add up the 5 criterion scores (each out of 5), convert to a score out of 100
+- Apply the honesty multiplier from Step 1
+- Show the calculation transparently
+- Give a 3–4 sentence overall candidate profile referencing specific evidence
+- If honesty is 1 or 2, the profile should focus on the fabrication and what it suggests"""
  
     with st.spinner("Analysing..."):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=1500,
+            max_tokens=2500,
         )
  
     st.subheader("AI analysis")
