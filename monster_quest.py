@@ -292,7 +292,7 @@ def run_ai_analysis(final_budget: int, totals: list):
         return
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
 
     history_text = "\n".join([
         f"Round {row['round']} (Phase {get_phase(row['round'])}): "
