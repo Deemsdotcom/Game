@@ -42,9 +42,9 @@ def compute_return(mech_id: str, alloc: int, round_num: int) -> float:
     pr = get_phase_round(round_num)
  
     if mech_id == "phase_switcher":
-        # Strong → near zero → reliable
+        # Strong → weak middle → reliable
         if p == 1: return alloc * 1.5
-        if p == 2: return alloc * [0.0, 0.1, 0.2, 0.5][pr - 1]
+        if p == 2: return alloc * random.uniform(0.4, 0.6)
         return alloc * 1.2
  
     if mech_id == "random":
@@ -56,8 +56,8 @@ def compute_return(mech_id: str, alloc: int, round_num: int) -> float:
         return alloc * 1.1
  
     if mech_id == "grower":
-        # Builds within each phase, resets on phase change
-        return alloc * [0.5, 0.8, 1.2, 1.8][pr - 1]
+        # Builds within each phase: 0.7, 0.9, 1.5, 1.7 — resets each phase
+        return alloc * [0.7, 0.9, 1.5, 1.7][pr - 1]
  
     if mech_id == "threshold":
         # Gives 0 below threshold; threshold rises each phase
@@ -66,15 +66,14 @@ def compute_return(mech_id: str, alloc: int, round_num: int) -> float:
         return 0.0 if alloc < 50 else alloc * 3.0
  
     if mech_id == "bad":
-        # Always loses money, noise keeps it uncertain, gets worse each phase
-        if p == 1: return alloc * random.uniform(0.6, 1.0)
-        if p == 2: return alloc * random.uniform(0.4, 0.8)
+        # Always loses money, gets significantly worse after round 6
+        if round_num <= 6: return alloc * random.uniform(0.6, 0.8)
         return alloc * random.uniform(0.2, 0.6)
  
     if mech_id == "alternator":
-        # Odd/even rhythm that flips every phase
+        # Odd/even rhythm — rounds 1-6 one way, rounds 7-12 flipped
         odd = round_num % 2 == 1
-        if p in (1, 3): return alloc * (2.0 if odd else 0.5)
+        if round_num <= 6: return alloc * (2.0 if odd else 0.5)
         return alloc * (0.5 if odd else 2.0)
  
     return float(alloc)
@@ -321,21 +320,28 @@ Reflections (written before seeing results — these reveal live thinking):
 {reflections_text}
  
 STEP 1 — HONESTY SCORE (do this first, before anything else):
-Compare every claim in the reflections against the actual move history.
+Compare claims in the reflections against the actual move history.
  
-Score honesty 1–5 using these strict rules:
-- 1 or 2: Clear fabrication. The candidate described a strategy that is directly contradicted
-  by their moves across multiple rounds. Example: wrote "I tested all buttons systematically
-  with small amounts" but put 70–100 points on one button every round and ignored 4+ buttons entirely.
-  This must be a significant, repeated contradiction — not a small gap.
-- 3: Noticeable inconsistencies. Claims are partially true but meaningfully overstated or distorted.
-- 4: Minor gaps. Small differences between what they said and did, could be genuine blind spots.
-- 5: Moves and reflections are consistent. What they wrote matches what they actually did.
+IMPORTANT: Noticing a pattern but not applying it perfectly every round is NOT dishonesty.
+People are imperfect. Only score below 4 if the gap between words and actions is large AND repeated.
  
-If honesty score is 1 or 2: FINAL SCORE = 0. State this clearly and stop the detailed scoring.
-If honesty score is 3: multiply final score by 0.70
-If honesty score is 4: multiply final score by 0.90
-If honesty score is 5: no adjustment
+Score honesty 1–5:
+- 1: Deliberate obvious fabrication only. Example: wrote "I never put more than 20 on one button"
+  but went 80+ on one button every single round. Must be a blatant, sustained contradiction.
+- 2: Significant exaggeration. Claims a clear strategy that appears in maybe 2 rounds out of 12.
+  Large and repeated gap between stated approach and actual behaviour.
+- 3: Overstates consistency. Says "I always did X" when they did X roughly half the time.
+  Pattern was real but the claim is meaningfully inflated.
+- 4: Minor normal gaps. Noticed a pattern but did not apply it perfectly. Forgot a round.
+  Described intention that was partially executed. This is normal human behaviour — do not penalise heavily.
+- 5: Reflections genuinely match moves. What they wrote is supported by what they did.
+ 
+Penalty multipliers:
+- Honesty 1: FINAL SCORE = 0. State this clearly and stop detailed scoring.
+- Honesty 2: multiply final score by 0.40
+- Honesty 3: multiply final score by 0.70
+- Honesty 4: multiply final score by 0.90
+- Honesty 5: no adjustment
  
 STEP 2 — SCORE EACH CRITERION (only if honesty >= 3):
 Reflections carry 70% of each score. Moves carry 30%.
