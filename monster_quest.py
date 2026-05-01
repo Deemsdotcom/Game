@@ -3,7 +3,6 @@ import google.generativeai as genai
 import random
 import os
 
-
 # ── Constants ─────────────────────────────────────────────────────────────────
 GLYPHS = ["△", "⊗", "ϴ", "⛰", "⊕", "⊓", "ℯ"]
 NAMES  = ["Vorx", "Zelan", "Murak", "Thiss", "Orbyn", "Creel", "Yveth"]
@@ -111,11 +110,10 @@ def reset():
 def render_hud():
     r      = st.session_state.gq_round
     budget = st.session_state.gq_budget
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3 = st.columns(3)
     c1.metric("Budget",      f"{budget}")
     c2.metric("Round",       f"{r} / 12")
-    c3.metric("Phase",       f"{get_phase(r)} / 3")
-    c4.metric("Rounds left", 13 - r)
+    c3.metric("Rounds left", 13 - r)
     st.progress((r - 1) / 12)
 
 # ── Allocate phase ────────────────────────────────────────────────────────────
@@ -123,8 +121,8 @@ def render_allocate():
     r      = st.session_state.gq_round
     budget = st.session_state.gq_budget
 
-    st.subheader(f"Round {r} — allocate your {budget} points")
-    st.caption("Distribute **all** your points across the 7 buttons. You must use exactly your budget.")
+    st.subheader(f"Round {r}")
+    st.caption(f"You have **{budget}** points. Allocate as many or as few as you want — minimum 1 per button. Unspent points carry to the next round.")
 
     cols   = st.columns(7)
     allocs = []
@@ -144,22 +142,24 @@ def render_allocate():
     total     = sum(allocs)
     remaining = budget - total
 
-    if remaining > 0:
-        st.info(f"Remaining: **{remaining}** — allocate all points to submit")
-    elif remaining < 0:
+    if over := remaining < 0:
         st.error(f"Over budget by {-remaining} — reduce some allocations")
+    elif remaining > 0:
+        st.info(f"Spending **{total}** of {budget} — **{remaining}** will carry to next round")
     else:
-        st.success("All points allocated — ready to submit")
+        st.success(f"Spending all {budget} points")
 
-    if st.button("Submit round →", disabled=(remaining != 0), type="primary", key=f"gq_submit_{r}"):
+    if st.button("Submit round →", disabled=(remaining < 0), type="primary", key=f"gq_submit_{r}"):
         order   = st.session_state.gq_order
         results = [compute_return(MECHS[order[i]], allocs[i], r) for i in range(7)]
-        new_budget = round(sum(results))
+        earned  = sum(results)
+        new_budget = round(remaining + earned)
 
         st.session_state.gq_history.append({
             "round":      r,
             "allocs":     list(allocs),
             "earned":     results,
+            "carried":    remaining,
             "new_budget": new_budget,
         })
 
@@ -237,7 +237,7 @@ def render_history():
             ]
             total = sum(row["earned"])
             st.write(
-                f"**Round {row['round']}** (Phase {get_phase(row['round'])}) — "
+                f"**Round {row['round']}** — "
                 f"{' | '.join(chips)} — earned: **{total:.0f}**"
             )
 
@@ -283,7 +283,7 @@ def render_end():
 
 def run_ai_analysis(final_budget: int, totals: list):
     # API key: set GOOGLE_API_KEY in .env or .streamlit/secrets.toml
-    api_key = "AIzaSyDDM7S8_JzDhEQJzchVgD_IlchiWMpBppE"
+    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY", "")
     if not api_key:
         st.error(
             "No API key found. Add `GOOGLE_API_KEY` to your `.env` file "
