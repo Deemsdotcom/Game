@@ -283,7 +283,7 @@ def render_end():
 
 def run_ai_analysis(final_budget: int, totals: list):
     # API key: set GOOGLE_API_KEY in .env or .streamlit/secrets.toml
-    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY", "")
+    api_key = "AIzaSyDDM7S8_JzDhEQJzchVgD_IlchiWMpBppE"
     if not api_key:
         st.error(
             "No API key found. Add `GOOGLE_API_KEY` to your `.env` file "
